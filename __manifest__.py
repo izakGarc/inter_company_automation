@@ -1,0 +1,27 @@
+{
+    'name': "Inter Company Automation",
+    'summary': """
+        Automatiza facturación y recepciones en transacciones inter-empresa""",
+    'description': """
+        - Valida automáticamente recepciones cuando se valida entrega
+        - Genera facturas proveedor cuando se genera factura cliente
+        - Valida facturas proveedor automáticamente
+    """,
+    'author': "Ili-Dev",
+    'website': "https://github.com/izakGarc",
+    'category': 'Inventory',
+    'version': '16.0',
+    'depends': [
+        'base',
+        'sale',
+        'purchase',
+        'stock',
+        'account',
+        'account_inter_company_rules',
+        'sale_purchase_inter_company_rules',
+    ],
+    'data': [
+        # 'security/ir.model.access.csv',
+    ],
+  
+}
