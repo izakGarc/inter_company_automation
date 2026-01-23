@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 from odoo import models
 
 class AccountMove(models.Model):
@@ -9,11 +8,21 @@ class AccountMove(models.Model):
         res = super(AccountMove, self).action_post()
         
         for move in self.filtered(lambda m: m.move_type == 'out_invoice'):
-            partner_company = move.partner_id.commercial_partner_id.company_id
-            if partner_company and partner_company != self.env.company:
-                move._create_inter_company_bill(partner_company)
+            sale = move.invoice_line_ids.mapped('sale_line_ids.order_id')
+            if sale and not sale.auto_generated:
+                company = self.env['res.company']._find_company_from_partner(sale.partner_id.id)
+                if company and company != self.env.company:
+                    move._validate_intercompany_bill(company, sale)
         
         return res
 
-    def _create_inter_company_bill(self, partner_company):
-        pass
+    def _validate_intercompany_bill(self, company, sale):
+        bill = self.sudo().search([
+            ('move_type', '=', 'in_invoice'),
+            ('company_id', '=', company.id),
+            ('state', '=', 'draft'),
+            ('ref', '=', sale.name)
+        ], limit=1)
+        
+        if bill:
+            bill.with_company(company.id).action_post()
