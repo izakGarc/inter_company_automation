@@ -48,3 +48,24 @@ class SaleOrder(models.Model):
                 }))
             
             self.env['account.move'].sudo().with_company(company.id).create(bill_vals)
+
+    def action_cancel(self):
+        res = super(SaleOrder, self).action_cancel()
+        
+        for order in self:
+            if not order.auto_generated:
+                company = self.env['res.company']._find_company_from_partner(order.partner_id.id)
+                if company and company != self.env.company:
+                    order._cancel_intercompany_po(company)
+        
+        return res
+
+    def _cancel_intercompany_po(self, company):
+        po = self.env['purchase.order'].sudo().search([
+            ('partner_ref', '=', self.name),
+            ('company_id', '=', company.id),
+            ('state', '!=', 'cancel')
+        ], limit=1)
+        
+        if po:
+            po.with_company(company.id).button_cancel()
