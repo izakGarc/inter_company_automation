@@ -25,7 +25,6 @@ class StockPicking(models.Model):
         ])
         
         for pick in pickings:
-            if pick.state == 'assigned':
-                for move in pick.move_ids:
-                    move.quantity_done = move.product_uom_qty
-                pick.with_company(company.id).button_validate()
+            for move in pick.move_ids:
+                move.quantity_done = move.product_uom_qty
+            pick.with_company(company.id).with_context(skip_backorder=True)._action_done()
