@@ -128,7 +128,9 @@ class SaleOrder(models.Model):
         ], limit=1)
         
         if supply_so and supply_so.invoice_status == 'to invoice':
-            supply_invoice = supply_so._create_invoices()
+            supply_invoice = supply_so.with_context(
+                check_move_validity=False
+            )._create_invoices()
             
             po = self.env['purchase.order'].sudo().search([
                 ('partner_ref', '=', supply_so.name),
@@ -137,9 +139,23 @@ class SaleOrder(models.Model):
             ], limit=1)
             
             if po:
+                partner = po.partner_id.sudo()
+                partner_id = partner.id
+                
+                if partner.company_id and partner.company_id.id != self.company_id.id:
+                    shared_partner = self.env['res.partner'].sudo().search([
+                        ('name', '=', partner.name),
+                        '|',
+                        ('company_id', '=', False),
+                        ('company_id', '=', self.company_id.id)
+                    ], limit=1)
+                    
+                    if shared_partner:
+                        partner_id = shared_partner.id
+                
                 bill_vals = {
                     'move_type': 'in_invoice',
-                    'partner_id': po.partner_id.id,
+                    'partner_id': partner_id,
                     'invoice_date': fields.Date.today(),
                     'currency_id': po.currency_id.id,
                     'company_id': self.company_id.id,
@@ -158,7 +174,9 @@ class SaleOrder(models.Model):
                         'purchase_line_id': line.id,
                     }))
                 
-                self.env['account.move'].sudo().with_company(self.company_id.id).create(bill_vals)
+                self.env['account.move'].sudo().with_company(self.company_id.id).with_context(
+                    check_move_validity=False
+                ).create(bill_vals)
 
     def action_cancel(self):
         res = super(SaleOrder, self).action_cancel()
