@@ -45,8 +45,6 @@ class AccountMove(models.Model):
             bill.with_company(company.id).action_post()
 
     def _create_and_validate_supply_invoices(self, sale):
-        _logger.info(f'Buscando supply SO con client_order_ref={sale.name}')
-        
         supply_so = self.env['sale.order'].sudo().search([
             ('client_order_ref', '=', sale.name),
             ('company_id', '=', 1)
@@ -55,29 +53,26 @@ class AccountMove(models.Model):
         _logger.info(f'Supply SO: {supply_so.name if supply_so else "NO ENCONTRADA"}')
         
         if supply_so:
-            _logger.info(f'Invoice status: {supply_so.invoice_status}')
+            supply_invoice = self.sudo().search([
+                ('move_type', '=', 'out_invoice'),
+                ('company_id', '=', 1),
+                ('state', '=', 'draft'),
+                ('invoice_line_ids.sale_line_ids.order_id', '=', supply_so.id)
+            ], limit=1)
             
-            if supply_so.invoice_status == 'to invoice':
-                try:
-                    supply_invoice = supply_so._create_invoices()
-                    _logger.info(f'Factura A creada: {supply_invoice.mapped("name")}')
-                    
-                    supply_invoice.with_company(1).action_post()
-                    _logger.info('Factura A validada')
-                    
-                    supply_bill = self.sudo().search([
-                        ('move_type', '=', 'in_invoice'),
-                        ('company_id', '=', sale.company_id.id),
-                        ('state', '=', 'draft'),
-                        ('ref', '=', supply_so.name)
-                    ], limit=1)
-                    
-                    _logger.info(f'Bill B encontrada: {supply_bill.name if supply_bill else "NO"}')
-                    
-                    if supply_bill:
-                        supply_bill.with_company(sale.company_id.id).action_post()
-                        _logger.info('Bill B validada')
-                except Exception as e:
-                    _logger.error(f'Error: {str(e)}')
-                    import traceback
-                    _logger.error(traceback.format_exc())
+            if supply_invoice:
+                _logger.info(f'Validando factura A: {supply_invoice.name}')
+                supply_invoice.with_company(1).action_post()
+                _logger.info('✓ Factura A validada')
+            
+            supply_bill = self.sudo().search([
+                ('move_type', '=', 'in_invoice'),
+                ('company_id', '=', sale.company_id.id),
+                ('state', '=', 'draft'),
+                ('ref', '=', supply_so.name)
+            ], limit=1)
+            
+            if supply_bill:
+                _logger.info(f'Validando bill B: {supply_bill.name}')
+                supply_bill.with_company(sale.company_id.id).action_post()
+                _logger.info('✓ Bill B validada')

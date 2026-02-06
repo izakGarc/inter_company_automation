@@ -17,11 +17,14 @@ class SaleOrder(models.Model):
         return res
 
     def _create_supply_sale_order(self, base_company):
-        outlet_partner = base_company.partner_id.sudo().search([
-            ('company_id', '=', self.company_id.id)
+        # Buscar el contacto que representa a Empresa B dentro de Empresa A
+        outlet_partner = self.env['res.partner'].sudo().search([
+            ('name', '=', self.company_id.name),
+            ('company_id', 'in', [False, base_company.id])
         ], limit=1)
         
         if not outlet_partner:
+            # Fallback: usar el partner de la empresa
             outlet_partner = self.company_id.partner_id
         
         so_vals = {
