@@ -19,6 +19,7 @@
         'account',
         'account_inter_company_rules',
         'sale_purchase_inter_company_rules',
+        'product',
     ],
     'data': [
         # 'security/ir.model.access.csv',
