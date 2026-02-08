@@ -22,7 +22,8 @@
         'product',
     ],
     'data': [
-        # 'security/ir.model.access.csv',
+        'security/ir.model.access.csv',
+        'wizard/account_move_cancel_wizard_view.xml',
     ],
   
 }

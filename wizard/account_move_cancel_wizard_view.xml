@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_account_move_cancel_wizard_form" model="ir.ui.view">
+        <field name="name">account.move.cancel.wizard.form</field>
+        <field name="model">account.move.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="invoice_id" invisible="1"/>
+                        <field name="has_related" invisible="1"/>
+                        <field name="related_invoice_ids" invisible="1"/>
+                        <field name="message" nolabel="1" widget="html"/>
+                    </group>
+                    
+                    <group invisible="not has_related">
+                        <label for="cancel_mode" string="¿Qué desea hacer?"/>
+                        <field name="cancel_mode" widget="radio" nolabel="1"/>
+                    </group>
+                </sheet>
+                
+                <footer>
+                    <button string="Cancelar Solo Esta Factura" 
+                            name="action_cancel_single" 
+                            type="object" 
+                            class="btn-secondary"
+                            invisible="not has_related"/>
+                    
+                    <button string="Cancelar Todas las Facturas" 
+                            name="action_cancel_all" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="not has_related"/>
+                    
+                    <button string="Cancelar Factura" 
+                            name="action_cancel_single" 
+                            type="object" 
+                            class="btn-primary"
+                            invisible="has_related"/>
+                    
+                    <button string="Volver" 
+                            class="btn-secondary" 
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
