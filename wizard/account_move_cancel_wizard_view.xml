@@ -13,7 +13,7 @@
                         <field name="message" nolabel="1" widget="html"/>
                     </group>
                     
-                    <group invisible="not has_related">
+                    <group attrs="{'invisible': [('has_related', '=', False)]}">
                         <label for="cancel_mode" string="¿Qué desea hacer?"/>
                         <field name="cancel_mode" widget="radio" nolabel="1"/>
                     </group>
@@ -24,19 +24,19 @@
                             name="action_cancel_single" 
                             type="object" 
                             class="btn-secondary"
-                            invisible="not has_related"/>
+                            attrs="{'invisible': [('has_related', '=', False)]}"/>
                     
                     <button string="Cancelar Todas las Facturas" 
                             name="action_cancel_all" 
                             type="object" 
                             class="btn-primary"
-                            invisible="not has_related"/>
+                            attrs="{'invisible': [('has_related', '=', False)]}"/>
                     
                     <button string="Cancelar Factura" 
                             name="action_cancel_single" 
                             type="object" 
                             class="btn-primary"
-                            invisible="has_related"/>
+                            attrs="{'invisible': [('has_related', '!=', False)]}"/>
                     
                     <button string="Volver" 
                             class="btn-secondary" 
