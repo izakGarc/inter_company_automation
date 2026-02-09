@@ -67,9 +67,7 @@ class AccountMoveCancelWizard(models.TransientModel):
         self.ensure_one()
         if self.invoice_id:
             invoice = self.invoice_id.sudo()
-            if invoice.state == 'posted':
-                invoice.button_draft()
-            invoice.button_cancel()
+            invoice.write({'state': 'cancel'})
         return {'type': 'ir.actions.act_window_close'}
 
     def action_cancel_all(self):
@@ -80,8 +78,6 @@ class AccountMoveCancelWizard(models.TransientModel):
         
         for invoice in invoices_to_cancel:
             if invoice.state != 'cancel':
-                if invoice.state == 'posted':
-                    invoice.button_draft()
-                invoice.button_cancel()
+                invoice.write({'state': 'cancel'})
         
         return {'type': 'ir.actions.act_window_close'}
