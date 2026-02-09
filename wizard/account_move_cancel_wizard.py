@@ -26,7 +26,7 @@ class AccountMoveCancelWizard(models.TransientModel):
             related = self.env['account.move']
             
             if wizard.invoice_id:
-                related = wizard.invoice_id._get_intercompany_related_invoices()
+                related = wizard.invoice_id.sudo()._get_intercompany_related_invoices()
             
             wizard.related_invoice_ids = related
             wizard.has_related = bool(related)
@@ -50,7 +50,7 @@ class AccountMoveCancelWizard(models.TransientModel):
                 <ul style="margin-top: 10px;">
                 '''
                 
-                for inv in wizard.related_invoice_ids:
+                for inv in wizard.related_invoice_ids.sudo():
                     tipo = 'Factura de Venta' if inv.move_type == 'out_invoice' else 'Factura de Compra'
                     empresa = inv.company_id.name
                     msg += f'<li><strong>{tipo}</strong> ({empresa}): <strong>{inv.name}</strong></li>'
@@ -66,19 +66,22 @@ class AccountMoveCancelWizard(models.TransientModel):
         """Cancelar solo la factura seleccionada"""
         self.ensure_one()
         if self.invoice_id:
-            self.invoice_id.button_draft()
-            self.invoice_id.button_cancel()
+            invoice = self.invoice_id.sudo()
+            if invoice.state == 'posted':
+                invoice.button_draft()
+            invoice.button_cancel()
         return {'type': 'ir.actions.act_window_close'}
 
     def action_cancel_all(self):
         """Cancelar todas las facturas relacionadas"""
         self.ensure_one()
         
-        invoices_to_cancel = self.invoice_id | self.related_invoice_ids
+        invoices_to_cancel = (self.invoice_id | self.related_invoice_ids).sudo()
         
         for invoice in invoices_to_cancel:
             if invoice.state != 'cancel':
-                invoice.button_draft()
+                if invoice.state == 'posted':
+                    invoice.button_draft()
                 invoice.button_cancel()
         
         return {'type': 'ir.actions.act_window_close'}
