@@ -201,3 +201,34 @@ class SaleOrder(models.Model):
         
         if po:
             po.with_company(company.id).button_cancel()
+            
+    def action_cancel(self):
+        """Override para mostrar wizard si es orden inter-empresa"""
+        
+        # Si viene del wizard, cancelar directo sin mostrar wizard de nuevo
+        if self.env.context.get('skip_intercompany_cancel'):
+            return super(SaleOrder, self).action_cancel()
+        
+        # Si es una sola orden de Empresa B (no Global), verificar inter-empresa
+        if len(self) == 1 and self.company_id.id != 1:
+            # Buscar si tiene orden supply
+            supply = self.env['sale.order'].sudo().search([
+                ('client_order_ref', '=', self.name),
+                ('company_id', '=', 1)
+            ], limit=1)
+            
+            if supply:
+                # Mostrar wizard
+                return {
+                    'type': 'ir.actions.act_window',
+                    'name': 'Cancelar Orden Inter-empresa',
+                    'res_model': 'sale.order.cancel.wizard',
+                    'view_mode': 'form',
+                    'target': 'new',
+                    'context': {
+                        'default_sale_order_id': self.id,
+                    }
+                }
+        
+        # Si no es inter-empresa o son múltiples, cancelar normal
+        return super(SaleOrder, self).action_cancel()

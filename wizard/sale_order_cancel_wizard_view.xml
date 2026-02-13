@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_sale_order_cancel_wizard_form" model="ir.ui.view">
+        <field name="name">sale.order.cancel.wizard.form</field>
+        <field name="model">sale.order.cancel.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Cancelar Orden Inter-empresa">
+                <sheet>
+                    <group col="1">
+                        <field name="sale_order_id" invisible="1"/>
+                        <field name="has_invoices" invisible="1"/>
+                        <field name="has_intercompany" invisible="1"/>
+                        <field name="supply_order_id" invisible="1"/>
+                        <field name="purchase_order_id" invisible="1"/>
+                        <field name="picking_out_a_id" invisible="1"/>
+                        <field name="picking_in_b_id" invisible="1"/>
+                        <field name="picking_out_b_id" invisible="1"/>
+                        
+                        <div style="min-width: 600px; padding: 20px; background: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6;">
+                            <field name="message" nolabel="1" widget="html"/>
+                        </div>
+                    </group>
+                </sheet>
+                
+                <footer>
+                    <button string="Cancelar Orden y Documentos" 
+                            name="action_cancel_all" 
+                            type="object" 
+                            class="btn-danger"
+                            attrs="{'invisible': [('has_invoices', '=', True)]}"/>
+                    
+                    <button string="No Puedo Cancelar (Hay Facturas)" 
+                            class="btn-secondary" 
+                            attrs="{'invisible': [('has_invoices', '=', False)]}"
+                            special="cancel"/>
+                    
+                    <button string="Volver" 
+                            class="btn-secondary" 
+                            attrs="{'invisible': [('has_invoices', '=', True)]}"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>
