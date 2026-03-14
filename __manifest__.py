@@ -25,6 +25,8 @@
         'security/ir.model.access.csv',
         'wizard/account_move_cancel_wizard_view.xml',
         'wizard/sale_order_cancel_wizard_view.xml',
+        'wizard/intercompany_report_wizard.xml',
+        'reports/intercompany_report_pdf.xml',
     ],
   
 }
