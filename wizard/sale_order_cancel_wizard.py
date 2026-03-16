@@ -269,44 +269,48 @@ class SaleOrderCancelWizard(models.TransientModel):
         
         # Revertir movimientos de stock manualmente
         for move in picking.move_ids.sudo():
-            if move.state == 'done':
-                # Revertir quantity_done en move_lines
-                for move_line in move.move_line_ids.sudo():
-                    # Actualizar quants directamente (revertir stock)
-                    quants_dest = self.env['stock.quant'].sudo().search([
-                        ('product_id', '=', move.product_id.id),
-                        ('location_id', '=', move.location_dest_id.id),
-                        ('company_id', '=', picking.company_id.id),
-                    ])
-                    
-                    for quant in quants_dest:
-                        # Reducir del destino
-                        new_qty = quant.quantity - move_line.qty_done
-                        if new_qty <= 0:
-                            quant.sudo().unlink()
-                        else:
-                            quant.sudo().write({'quantity': new_qty})
-                    
-                    # Aumentar en origen
-                    quant_src = self.env['stock.quant'].sudo().search([
-                        ('product_id', '=', move.product_id.id),
-                        ('location_id', '=', move.location_id.id),
-                        ('company_id', '=', picking.company_id.id),
-                    ], limit=1)
-                    
-                    if quant_src:
-                        quant_src.sudo().write({
-                            'quantity': quant_src.quantity + move_line.qty_done
-                        })
-                    else:
-                        self.env['stock.quant'].sudo().create({
-                            'product_id': move.product_id.id,
-                            'location_id': move.location_id.id,
-                            'quantity': move_line.qty_done,
-                            'company_id': picking.company_id.id,
-                        })
+            # CAMBIO: Procesar moves en CUALQUIER estado (no solo done)
+            if move.state in ('assigned', 'done', 'confirmed'):
                 
-                # Marcar move como cancelado usando SQL (bypass validaciones)
+                # Solo revertir stock si el move está DONE (ya se movió físicamente)
+                if move.state == 'done':
+                    # Revertir quantity_done en move_lines
+                    for move_line in move.move_line_ids.sudo():
+                        # Actualizar quants directamente (revertir stock)
+                        quants_dest = self.env['stock.quant'].sudo().search([
+                            ('product_id', '=', move.product_id.id),
+                            ('location_id', '=', move.location_dest_id.id),
+                            ('company_id', '=', picking.company_id.id),
+                        ])
+                        
+                        for quant in quants_dest:
+                            # Reducir del destino
+                            new_qty = quant.quantity - move_line.qty_done
+                            if new_qty <= 0:
+                                quant.sudo().unlink()
+                            else:
+                                quant.sudo().write({'quantity': new_qty})
+                        
+                        # Aumentar en origen
+                        quant_src = self.env['stock.quant'].sudo().search([
+                            ('product_id', '=', move.product_id.id),
+                            ('location_id', '=', move.location_id.id),
+                            ('company_id', '=', picking.company_id.id),
+                        ], limit=1)
+                        
+                        if quant_src:
+                            quant_src.sudo().write({
+                                'quantity': quant_src.quantity + move_line.qty_done
+                            })
+                        else:
+                            self.env['stock.quant'].sudo().create({
+                                'product_id': move.product_id.id,
+                                'location_id': move.location_id.id,
+                                'quantity': move_line.qty_done,
+                                'company_id': picking.company_id.id,
+                            })
+                
+                # Marcar move como cancelado SIEMPRE (done, assigned, confirmed)
                 self.env.cr.execute("""
                     UPDATE stock_move 
                     SET state = 'cancel' 
@@ -319,5 +323,3 @@ class SaleOrderCancelWizard(models.TransientModel):
             SET state = 'cancel' 
             WHERE id = %s
         """, (picking.id,))
-        
-        # NO hacer commit aquí, se hará automáticamente al final

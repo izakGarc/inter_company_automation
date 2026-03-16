@@ -17,6 +17,9 @@
                 <t t-set="o" t-value="docs[0] if docs else None"/>
                 <div class="page">
                     <style>
+                        /* RESET GLOBAL */
+                        table, th, td, tr { border: 0 !important; border-color: transparent !important; outline: 0 !important; }
+
                         body {
                             font-family: 'DejaVu Sans', Arial, sans-serif;
                             font-size: 9px;
@@ -28,10 +31,13 @@
                         .lh-wrap {
                             width: 100%;
                             border-collapse: collapse;
-                            border-bottom: 2px solid #c9a96e;
                             margin-bottom: 4px;
                         }
-                        .lh-wrap td { vertical-align: bottom; padding-bottom: 10px; }
+                        .lh-wrap td {
+                            vertical-align: bottom;
+                            padding-bottom: 10px;
+                            border-bottom: 2px solid #c9a96e !important;
+                        }
                         .brand {
                             font-size: 20px; font-weight: 700;
                             letter-spacing: 5px; text-transform: uppercase; color: #1a1a1a;
@@ -46,13 +52,28 @@
                             font-size: 13px; font-weight: 700; text-transform: uppercase;
                             letter-spacing: 2px; color: #1a1a1a; margin: 0 0 2px 0;
                         }
-                        .doc-title .doc-sub { font-size: 7px; color: #aaa; letter-spacing: 1px; }
+                        .doc-title .doc-sub { font-size: 7px; color: #999999; letter-spacing: 1px; }
 
-                        /* ── PARTES ── */
-                        .parties-wrap { width: 100%; border-collapse: collapse; margin: 14px 0; }
+                        /* ── PARTES: sin border en tabla, simulado con bg en celdas ── */
+                        .parties-wrap {
+                            width: 100%;
+                            border-collapse: separate;
+                            border-spacing: 8px 0;
+                            margin: 14px 0;
+                        }
                         .party-box {
-                            width: 48%; border: 1px solid #ede8df;
-                            border-top: 3px solid #c9a96e; padding: 9px 13px; vertical-align: top;
+                            width: 48%;
+                            background-color: #faf8f5;
+                            padding: 10px 13px;
+                            vertical-align: top;
+                        }
+                        /* Línea dorada superior simulada con border-top directo en td */
+                        .party-box-top {
+                            width: 48%;
+                            background-color: #c9a96e;
+                            padding: 3px 0;
+                            font-size: 1px;
+                            line-height: 1px;
                         }
                         .party-box .pb-role {
                             font-size: 6px; text-transform: uppercase; letter-spacing: 1.5px;
@@ -61,73 +82,95 @@
                         .party-box .pb-name { font-size: 11px; font-weight: 700; color: #1a1a1a; }
                         .party-spacer { width: 4%; }
 
-                        /* ── META ── */
-                        .meta-bar {
-                            width: 100%; border-collapse: collapse;
-                            background: #faf8f5; border: 1px solid #ede8df;
-                            border-left: 3px solid #c9a96e; margin-bottom: 20px;
+                        /* ── META BAR: fondo crema, línea izq dorada con celda ── */
+                        .meta-wrap {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 20px;
                         }
-                        .meta-bar td {
-                            padding: 8px 14px; font-size: 8px;
-                            vertical-align: top; border-right: 1px solid #ede8df;
+                        .meta-stripe {
+                            width: 4px;
+                            background-color: #c9a96e;
+                            padding: 0;
                         }
-                        .meta-bar td:last-child { border-right: none; }
-                        .meta-bar .ml {
+                        .meta-content {
+                            background-color: #faf8f5;
+                            padding: 0;
+                        }
+                        .meta-inner {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        .meta-inner td {
+                            padding: 8px 14px;
+                            font-size: 8px;
+                            vertical-align: top;
+                        }
+                        .meta-inner .ml {
                             display: block; font-size: 6px; text-transform: uppercase;
                             letter-spacing: 1px; color: #c9a96e; font-weight: 700; margin-bottom: 2px;
                         }
-                        .meta-bar .mv { font-size: 9.5px; font-weight: 700; color: #1a1a1a; }
+                        .meta-inner .mv { font-size: 9.5px; font-weight: 700; color: #1a1a1a; }
 
                         /* ── SECTION HEADER ── */
-                        .sh { width: 100%; border-collapse: collapse; border-bottom: 1px solid #c9a96e; margin-bottom: 0; }
-                        .sh td { padding: 5px 0 3px 0; vertical-align: middle; }
+                        .sh {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-bottom: 0;
+                        }
+                        .sh td {
+                            padding: 5px 0 3px 0;
+                            vertical-align: middle;
+                            border-bottom: 1px solid #c9a96e !important;
+                        }
                         .sh .st { font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #1a1a1a; }
                         .sh .st-dot { color: #c9a96e; margin-right: 5px; }
                         .sh .sc { text-align: right; font-size: 7px; color: #c9a96e; font-weight: 600; }
 
                         /* ── TABLA RESUMEN ── */
                         table.rt {
-                            width: 100%; border-collapse: collapse;
-                            font-size: 8px; margin-bottom: 18px;
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 8px;
+                            margin-bottom: 18px;
                         }
                         table.rt thead th {
                             padding: 5px 8px; text-align: left; font-weight: 700;
                             font-size: 6.5px; text-transform: uppercase; letter-spacing: 0.5px;
-                            color: #888; border-bottom: 1px solid #ede8df;
-                            background: #faf8f5; white-space: nowrap;
+                            color: #666666; background-color: #f5f2ee;
+                            border-bottom: 1px solid #c9a96e !important;
+                            white-space: nowrap;
                         }
                         table.rt thead th.tr { text-align: right; }
-                        table.rt tbody tr { border-bottom: 1px solid #f0ece6; }
-                        table.rt tbody tr.alt { background: #faf8f5; }
+                        table.rt tbody tr.alt { background-color: #faf8f5; }
                         table.rt tbody td { padding: 5px 8px; vertical-align: middle; color: #2c2c2c; }
                         table.rt tbody td.tr { text-align: right; }
-                        table.rt tbody td.mono { font-family: monospace; font-size: 7px; color: #888; }
+                        table.rt tbody td.mono { font-family: monospace; font-size: 7px; color: #888888; }
                         table.rt tbody td.bold { font-weight: 700; }
                         table.rt tbody td.gold { color: #c9a96e; font-weight: 700; }
-                        table.rt tbody td.muted { color: #aaa; font-size: 7.5px; }
-                        table.rt tfoot tr { background: #1a1a1a; }
-                        table.rt tfoot td { padding: 6px 8px; font-size: 8.5px; font-weight: 700; color: #fff; }
+                        table.rt tbody td.muted { color: #aaaaaa; font-size: 7.5px; }
+                        table.rt tfoot tr { background-color: #1a1a1a; }
+                        table.rt tfoot td { padding: 6px 8px; font-size: 8.5px; font-weight: 700; color: #ffffff; }
                         table.rt tfoot td.tr { text-align: right; }
                         table.rt tfoot td.gold { color: #c9a96e; }
 
                         /* ── TABLA DETALLE OCs ── */
                         table.dt {
-                            width: 100%; border-collapse: collapse;
-                            font-size: 8px; margin-bottom: 18px;
+                            width: 100%;
+                            border-collapse: collapse;
+                            font-size: 8px;
+                            margin-bottom: 18px;
                         }
                         table.dt thead th {
                             padding: 5px 8px; text-align: left; font-weight: 700;
                             font-size: 6.5px; text-transform: uppercase; letter-spacing: 0.5px;
-                            color: #888; border-bottom: 1px solid #ede8df;
-                            background: #faf8f5; white-space: nowrap;
+                            color: #666666; background-color: #f5f2ee;
+                            border-bottom: 1px solid #c9a96e !important;
+                            white-space: nowrap;
                         }
                         table.dt thead th.tr { text-align: right; }
-
-                        /* Fila de folio (cabecera de grupo) */
                         table.dt tr.folio-row td {
-                            background: #f5f0e8;
-                            border-top: 1px solid #c9a96e;
-                            border-bottom: 1px solid #e8dfc8;
+                            background-color: #f5f0e8;
                             padding: 5px 8px;
                             font-weight: 700;
                             font-size: 8px;
@@ -135,56 +178,66 @@
                         }
                         table.dt tr.folio-row td.gold { color: #c9a96e; }
                         table.dt tr.folio-row td.tr { text-align: right; }
-
-                        /* Filas de lineas bajo el folio */
                         table.dt tr.line-row td {
                             padding: 4px 8px 4px 20px;
-                            border-bottom: 1px solid #f5f0e8;
-                            color: #444;
+                            color: #444444;
                             font-size: 7.5px;
+                            background-color: #ffffff;
                         }
                         table.dt tr.line-row td.tr { text-align: right; }
-                        table.dt tr.line-row td.mono { font-family: monospace; font-size: 7px; color: #888; }
-                        table.dt tr.line-row.alt td { background: #fdfcfa; }
-
-                        /* Fila de subtotal del folio */
+                        table.dt tr.line-row td.mono { font-family: monospace; font-size: 7px; color: #888888; }
+                        table.dt tr.line-row.alt td { background-color: #fdfcfa; }
                         table.dt tr.subtotal-row td {
                             padding: 4px 8px;
-                            border-bottom: 2px solid #e8dfc8;
                             font-size: 7.5px;
-                            color: #888;
+                            color: #888888;
                             font-style: italic;
+                            background-color: #faf8f5;
                         }
                         table.dt tr.subtotal-row td.tr { text-align: right; }
                         table.dt tr.subtotal-row td.gold { color: #c9a96e; font-weight: 700; font-style: normal; }
-
-                        table.dt tfoot tr { background: #1a1a1a; }
-                        table.dt tfoot td { padding: 6px 8px; font-size: 8.5px; font-weight: 700; color: #fff; }
+                        table.dt tfoot tr { background-color: #1a1a1a; }
+                        table.dt tfoot td { padding: 6px 8px; font-size: 8.5px; font-weight: 700; color: #ffffff; }
                         table.dt tfoot td.tr { text-align: right; }
                         table.dt tfoot td.gold { color: #c9a96e; }
 
-                        /* ── NOTA LEGAL ── */
-                        .legal-note {
-                            border: 1px solid #ede8df; border-left: 3px solid #c9a96e;
-                            background: #faf8f5; padding: 10px 14px;
-                            font-size: 7.5px; color: #555; margin-top: 18px; line-height: 1.7;
-                        }
-                        .legal-note strong { color: #1a1a1a; }
-
                         /* ── BADGE ── */
                         .badge {
-                            display: inline-block; padding: 2px 5px; border-radius: 2px;
+                            display: inline-block; padding: 2px 5px;
                             font-size: 6px; font-weight: 700; text-transform: uppercase;
                         }
-                        .badge-purchase, .badge-done { background:#edf7ed; color:#2e7d32; border:1px solid #c8e6c9; }
-                        .badge-draft                 { background:#fef9e7; color:#b7860d; border:1px solid #f9e9a0; }
-                        .badge-cancel                { background:#fdecea; color:#c62828; border:1px solid #f5c6cb; }
+                        .badge-purchase, .badge-done { background-color: #edf7ed; color: #2e7d32; }
+                        .badge-draft                 { background-color: #fef9e7; color: #b7860d; }
+                        .badge-cancel                { background-color: #fdecea; color: #c62828; }
+
+                        /* ── NOTA LEGAL ── */
+                        .legal-wrap {
+                            width: 100%;
+                            border-collapse: collapse;
+                            margin-top: 18px;
+                        }
+                        .legal-stripe {
+                            width: 4px;
+                            background-color: #c9a96e;
+                            padding: 0;
+                        }
+                        .legal-content {
+                            background-color: #faf8f5;
+                            padding: 10px 14px;
+                            font-size: 7.5px;
+                            color: #555555;
+                            line-height: 1.7;
+                        }
+                        .legal-content strong { color: #1a1a1a; }
                     </style>
 
                     <!-- ══ CABECERA ══ -->
                     <table class="lh-wrap">
                         <tr>
                             <td style="width:50%">
+                                <div class="brand">
+                                
+                                </div>
                             </td>
                             <td class="doc-title">
                                 <h1>Concentrado de Suministro</h1>
@@ -193,8 +246,13 @@
                         </tr>
                     </table>
 
-                    <!-- ══ PARTES ══ -->
+                    <!-- ══ PARTES: línea dorada como fila separada ══ -->
                     <table class="parties-wrap">
+                        <tr>
+                            <td style="width:48%; background-color:#c9a96e; padding:3px 0; font-size:1px; line-height:1px;">&#160;</td>
+                            <td style="width:4%;"></td>
+                            <td style="width:48%; background-color:#c9a96e; padding:3px 0; font-size:1px; line-height:1px;">&#160;</td>
+                        </tr>
                         <tr>
                             <td class="party-box">
                                 <span class="pb-role">Compradora</span>
@@ -208,24 +266,31 @@
                         </tr>
                     </table>
 
-                    <!-- ══ META ══ -->
-                    <table class="meta-bar">
+                    <!-- ══ META: línea dorada como celda izquierda ══ -->
+                    <table class="meta-wrap">
                         <tr>
-                            <td>
-                                <span class="ml">Periodo</span>
-                                <span class="mv">
-                                    <t t-esc="data.get('date_start','')"/>&#160;&#8212;&#160;<t t-esc="data.get('date_end','')"/>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="ml">Total de OC incluidas</span>
-                                <span class="mv" t-esc="po_count"/>
-                            </td>
-                            <td>
-                                <span class="ml">Importe Total</span>
-                                <span class="mv" style="color:#c9a96e">
-                                    <t t-esc="currency_symbol"/>&#160;<t t-esc="grand_total"/>
-                                </span>
+                            <td class="meta-stripe">&#160;</td>
+                            <td class="meta-content">
+                                <table class="meta-inner">
+                                    <tr>
+                                        <td>
+                                            <span class="ml">Periodo</span>
+                                            <span class="mv">
+                                                <t t-esc="data.get('date_start','')"/>&#160;&#8212;&#160;<t t-esc="data.get('date_end','')"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="ml">Total de OC incluidas</span>
+                                            <span class="mv" t-esc="po_count"/>
+                                        </td>
+                                        <td>
+                                            <span class="ml">Importe Total</span>
+                                            <span class="mv" style="color:#c9a96e">
+                                                <t t-esc="currency_symbol"/>&#160;<t t-esc="grand_total"/>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </table>
                             </td>
                         </tr>
                     </table>
@@ -292,12 +357,11 @@
                         </thead>
                         <tbody>
                             <t t-foreach="po_lines" t-as="po">
-                                <!-- Fila del folio -->
                                 <tr class="folio-row">
                                     <td colspan="2" class="bold">
                                         <t t-esc="po['name']"/>
                                         &#160;&#160;
-                                        <span style="font-weight:400; font-size:7px; color:#888">
+                                        <span style="font-weight:400; font-size:7px; color:#888888">
                                             Ref: <t t-esc="po['ref']"/>
                                         </span>
                                     </td>
@@ -309,7 +373,6 @@
                                               t-esc="po['state']"/>
                                     </td>
                                 </tr>
-                                <!-- Filas de líneas -->
                                 <t t-foreach="po['lines']" t-as="line">
                                     <tr t-att-class="'line-row alt' if line_index % 2 == 1 else 'line-row'">
                                         <td class="mono" t-esc="line['sku']"/>
@@ -322,7 +385,6 @@
                                         <td/>
                                     </tr>
                                 </t>
-                                <!-- Subtotal del folio -->
                                 <tr class="subtotal-row">
                                     <td colspan="6" class="tr">Subtotal / Impuestos</td>
                                     <td class="tr gold">
@@ -343,16 +405,21 @@
                         </tfoot>
                     </table>
 
-                    <!-- ══ NOTA LEGAL ══ -->
-                    <div class="legal-note">
-                        <strong>Nota:</strong> El presente concentrado forma parte integral del Contrato de Suministro celebrado entre
-                        <strong t-esc="data.get('company_name','')"/> y <strong>Loomber Global</strong>.
-                        Las ordenes de compra relacionadas en este documento amparan las operaciones de suministro
-                        correspondientes al periodo del <strong t-esc="data.get('date_start','')"/>
-                        al <strong t-esc="data.get('date_end','')"/>,
-                        por un importe total de
-                        <strong><t t-esc="currency_symbol"/>&#160;<t t-esc="grand_total"/></strong>.
-                    </div>
+                    <!-- ══ NOTA LEGAL: línea dorada como celda izquierda ══ -->
+                    <table class="legal-wrap">
+                        <tr>
+                            <td class="legal-stripe">&#160;</td>
+                            <td class="legal-content">
+                                <strong>Nota:</strong> El presente concentrado forma parte integral del Contrato de Suministro celebrado entre
+                                <strong t-esc="data.get('company_name','')"/> y <strong>Loomber Global</strong>.
+                                Las ordenes de compra relacionadas en este documento amparan las operaciones de suministro
+                                correspondientes al periodo del <strong t-esc="data.get('date_start','')"/>
+                                al <strong t-esc="data.get('date_end','')"/>,
+                                por un importe total de
+                                <strong><t t-esc="currency_symbol"/>&#160;<t t-esc="grand_total"/></strong>.
+                            </td>
+                        </tr>
+                    </table>
 
                 </div>
             </t>
