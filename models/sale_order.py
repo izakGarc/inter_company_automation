@@ -22,28 +22,39 @@ class SaleOrder(models.Model):
             ('name', '=', self.company_id.name),
             ('company_id', 'in', [False, base_company.id])
         ], limit=1)
-        
+
         if not outlet_partner:
-            # Fallback: usar el partner de la empresa
             outlet_partner = self.company_id.partner_id
-        
+
+        # Buscar la lista de precios asignada al partner en Empresa A
+        pricelist = outlet_partner.with_company(base_company.id).property_product_pricelist
+
         so_vals = {
             'partner_id': outlet_partner.id,
             'company_id': base_company.id,
             'client_order_ref': self.name,
             'date_order': self.date_order,
+            'pricelist_id': pricelist.id if pricelist else False,
             'order_line': [],
         }
-        
+
         for line in self.order_line:
             if not line.display_type:
+                price_unit = line.price_unit  # fallback
+                if pricelist:
+                    price_unit = pricelist.with_company(base_company.id)._get_product_price(
+                        line.product_id,
+                        line.product_uom_qty,
+                        uom=line.product_uom,
+                    )
+
                 so_vals['order_line'].append((0, 0, {
                     'product_id': line.product_id.id,
                     'product_uom_qty': line.product_uom_qty,
                     'product_uom': line.product_uom.id,
-                    'price_unit': line.price_unit,
+                    'price_unit': price_unit,
                 }))
-        
+
         supply_so = self.env['sale.order'].sudo().with_company(base_company.id).create(so_vals)
         supply_so.action_confirm()
 
@@ -61,8 +72,16 @@ class SaleOrder(models.Model):
             ])
             
             for pick in supply_pickings:
-                for move in pick.move_ids:
-                    move.quantity_done = move.product_uom_qty
+                # Asignar disponibilidad antes de intentar setear quantity_done
+                if pick.state not in ('assigned',):
+                    pick.with_company(1).action_assign()
+                for move in pick.move_ids.filtered(lambda m: m.state not in ['done', 'cancel']):
+                    # Setear qty_done en move_line_ids (forma correcta en Odoo 16)
+                    for ml in move.move_line_ids:
+                        ml.qty_done = ml.reserved_uom_qty
+                    # Si no hay move_lines (sin stock), crearlas manualmente
+                    if not move.move_line_ids:
+                        move._set_quantity_done(move.product_uom_qty)
                 pick.with_company(1).with_context(skip_backorder=True)._action_done()
             
             purchase_pickings = self.env['stock.picking'].sudo().search([
@@ -72,8 +91,13 @@ class SaleOrder(models.Model):
             ])
             
             for pick in purchase_pickings:
-                for move in pick.move_ids:
-                    move.quantity_done = move.product_uom_qty
+                if pick.state not in ('assigned',):
+                    pick.with_company(self.company_id.id).action_assign()
+                for move in pick.move_ids.filtered(lambda m: m.state not in ['done', 'cancel']):
+                    for ml in move.move_line_ids:
+                        ml.qty_done = ml.reserved_uom_qty
+                    if not move.move_line_ids:
+                        move._set_quantity_done(move.product_uom_qty)
                 pick.with_company(self.company_id.id).with_context(skip_backorder=True)._action_done()
 
     def _create_invoices(self, grouped=False, final=False, date=None):
